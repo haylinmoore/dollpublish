@@ -12,7 +12,7 @@ pub async fn view_post(
     let rendered_content = post.render_content();
     let html = state
         .templates
-        .render(&state.data_dir, &username, &rendered_content);
+        .render(&state.data_dir, &username, &post, &rendered_content);
 
     Ok(Html(html))
 }

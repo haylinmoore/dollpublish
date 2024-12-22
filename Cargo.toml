@@ -14,3 +14,4 @@ uuid = { version = "1.0", features = ["v4"] }
 thiserror = "1.0"
 pulldown-cmark = "0.12.2"
 dotenvy = "0.15.7"
+handlebars = "6.2.0"
