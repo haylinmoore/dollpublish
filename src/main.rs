@@ -4,8 +4,9 @@ mod routes;
 mod utils;
 
 use axum::Router;
+use dotenvy::dotenv;
 use models::user::Users;
-use std::{path::PathBuf, sync::Arc};
+use std::{env, path::PathBuf, sync::Arc};
 use tokio::sync::Mutex;
 
 use utils::template::Templates;
@@ -17,9 +18,29 @@ pub struct AppState {
     templates: Templates,
 }
 
+fn get_config() -> (PathBuf, String, u16) {
+    dotenv().ok();
+
+    let data_dir = env::var("MOON_DATA_DIR").unwrap_or_else(|_| "./data".to_string());
+    let bind_addr = env::var("MOON_BIND_ADDR").unwrap_or_else(|_| "0.0.0.0".to_string());
+    let port = env::var("MOON_PORT")
+        .ok()
+        .and_then(|p| p.parse().ok())
+        .unwrap_or(3000);
+
+    (PathBuf::from(data_dir), bind_addr, port)
+}
+
 #[tokio::main]
 async fn main() {
-    let data_dir = PathBuf::from("./data");
+    // Get configuration
+    let (data_dir, bind_addr, port) = get_config();
+
+    // Create data directory if it doesn't exist
+    if !data_dir.exists() {
+        std::fs::create_dir_all(&data_dir).expect("Failed to create data directory");
+    }
+
     let users = Users::load_or_create(&data_dir)
         .await
         .expect("Failed to initialize users");
@@ -37,9 +58,11 @@ async fn main() {
         .merge(routes::view::view_routes())
         .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
+    let addr = format!("{}:{}", bind_addr, port);
+    let listener = tokio::net::TcpListener::bind(&addr)
         .await
-        .expect("Failed to bind to port 3000");
-    println!("Server running on http://0.0.0.0:3000");
+        .unwrap_or_else(|_| panic!("Failed to bind to {}", addr));
+
+    println!("Server running on http://{}", addr);
     axum::serve(listener, app).await.unwrap();
 }
