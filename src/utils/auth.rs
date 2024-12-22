@@ -4,6 +4,7 @@ use axum::http::HeaderMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
+// src/utils/auth.rs
 pub async fn authenticate(headers: &HeaderMap, users: &Arc<Mutex<Users>>) -> Result<String> {
     let api_key = headers
         .get("api-key")
@@ -17,7 +18,7 @@ pub async fn authenticate(headers: &HeaderMap, users: &Arc<Mutex<Users>>) -> Res
         .to_str()
         .map_err(|_| AppError::AuthenticationError)?;
 
-    let users = users.lock().await;
+    let mut users = users.lock().await;
     users
         .verify_credentials(api_key, api_secret)
         .await

@@ -1,5 +1,6 @@
 use super::metadata::Metadata;
 use crate::error::{AppError, Result};
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use pulldown_cmark::{html, Options, Parser};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs, path::PathBuf};
@@ -51,11 +52,10 @@ impl Post {
 
             for (filename, content) in attachments {
                 let file_path = attachments_dir.join(filename);
-                fs::write(file_path, base64::decode(content).unwrap())
+                fs::write(file_path, BASE64.decode(content).unwrap())
                     .map_err(|e| AppError::Internal(e.to_string()))?;
             }
         }
-
         Ok(())
     }
 
@@ -90,14 +90,13 @@ impl Post {
                 let filename_str = filename.to_string_lossy().into_owned();
                 let content =
                     fs::read(entry.path()).map_err(|e| AppError::Internal(e.to_string()))?;
-                attachments_map.insert(filename_str, base64::encode(content));
+                attachments_map.insert(filename_str, BASE64.encode(content));
             }
             Some(attachments_map)
         } else {
             None
         };
 
-        // Construct API-compatible Post
         Ok(Post {
             name: post_metadata.name,
             path: post_metadata.path,
@@ -134,7 +133,6 @@ impl Post {
         html_output
     }
 
-    // Alias for load() to maintain compatibility
     pub async fn load_by_path(data_dir: &PathBuf, username: &str, id: &str) -> Result<Self> {
         Self::load(data_dir, username, id).await
     }
