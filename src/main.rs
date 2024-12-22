@@ -56,6 +56,7 @@ async fn main() {
     let app = Router::new()
         .merge(routes::moon::routes::moon_routes())
         .merge(routes::view::view_routes())
+        .merge(routes::files::file_routes())
         .with_state(state);
 
     let addr = format!("{}:{}", bind_addr, port);

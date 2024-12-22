@@ -18,5 +18,5 @@ pub async fn view_post(
 }
 
 pub fn view_routes() -> axum::Router<crate::AppState> {
-    axum::Router::new().route("/:username/:id", axum::routing::get(view_post))
+    axum::Router::new().route("/:username/:id/", axum::routing::get(view_post))
 }

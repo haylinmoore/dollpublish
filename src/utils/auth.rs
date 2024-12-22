@@ -4,19 +4,20 @@ use axum::http::HeaderMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-// src/utils/auth.rs
 pub async fn authenticate(headers: &HeaderMap, users: &Arc<Mutex<Users>>) -> Result<String> {
     let api_key = headers
         .get("api-key")
-        .ok_or(AppError::AuthenticationError)?
-        .to_str()
-        .map_err(|_| AppError::AuthenticationError)?;
+        .and_then(|h| h.to_str().ok())
+        .unwrap_or("");
 
     let api_secret = headers
         .get("api-secret")
-        .ok_or(AppError::AuthenticationError)?
-        .to_str()
-        .map_err(|_| AppError::AuthenticationError)?;
+        .and_then(|h| h.to_str().ok())
+        .unwrap_or("");
+
+    if api_key.is_empty() && api_secret.is_empty() {
+        return Err(AppError::AuthenticationError);
+    }
 
     let mut users = users.lock().await;
     users

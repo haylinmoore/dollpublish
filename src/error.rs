@@ -10,6 +10,8 @@ pub enum AppError {
     NotFound,
     #[error("Internal server error: {0}")]
     Internal(String),
+    #[error("Invalid file")]
+    InvalidFile,
 }
 
 impl IntoResponse for AppError {
@@ -21,6 +23,10 @@ impl IntoResponse for AppError {
             ),
             AppError::NotFound => (StatusCode::NOT_FOUND, "Resource not found".to_string()),
             AppError::Internal(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
+            AppError::InvalidFile => (
+                StatusCode::BAD_REQUEST,
+                "Invalid file operation".to_string(),
+            ),
         };
 
         (status, Json(json!({ "error": message }))).into_response()
