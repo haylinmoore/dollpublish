@@ -127,13 +127,42 @@ impl Post {
         options.insert(Options::ENABLE_TASKLISTS);
 
         let parser = Parser::new_ext(&self.content, options);
-        let mut html_output = String::new();
-        html::push_html(&mut html_output, parser);
+        let mut rendered = String::new();
+        html::push_html(&mut rendered, parser);
 
-        html_output
+        if let Some(attachments) = &self.attachments {
+            for (name, _) in attachments {
+                let pattern = format!("![[{}]]", name);
+                if rendered.contains(&pattern) {
+                    let replacement = transform_attachment_link(name);
+                    rendered = rendered.replace(&pattern, &replacement);
+                }
+            }
+        }
+
+        rendered
     }
+}
 
-    pub async fn load_by_path(data_dir: &PathBuf, username: &str, id: &str) -> Result<Self> {
-        Self::load(data_dir, username, id).await
+fn transform_attachment_link(name: &str) -> String {
+    let mime = mime_guess::from_path(name).first_or_octet_stream();
+
+    match mime.type_() {
+        mime::IMAGE => {
+            format!("<img src=\"attachments/{}\" />", name)
+        }
+        mime::AUDIO => {
+            format!(
+                "<audio controls><source src=\"attachments/{}\" type=\"{}\">{}</audio>",
+                name, mime, name
+            )
+        }
+        mime::VIDEO => {
+            format!(
+                "<video controls><source src=\"attachments/{}\" type=\"{}\">{}</video>",
+                name, mime, name
+            )
+        }
+        _ => format!("<a href=\"attachments/{}\" download>{}</a>", name, name),
     }
 }

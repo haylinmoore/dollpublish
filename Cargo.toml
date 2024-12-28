@@ -15,3 +15,6 @@ thiserror = "1.0"
 pulldown-cmark = "0.12.2"
 dotenvy = "0.15.7"
 handlebars = "6.2.0"
+tokio-util = { version = "0.7.13", features = ["io"] }
+mime_guess = "2.0.5"
+mime = "0.3.17"
