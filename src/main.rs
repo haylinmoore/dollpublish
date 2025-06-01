@@ -64,6 +64,6 @@ async fn main() {
         .await
         .unwrap_or_else(|_| panic!("Failed to bind to {}", addr));
 
-    println!("Server running on http://{}", addr);
+    println!("dollpublish has started on http://{}", addr);
     axum::serve(listener, app).await.unwrap();
 }
