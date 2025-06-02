@@ -57,9 +57,33 @@ pub async fn redirect_to_github() -> Redirect {
     Redirect::permanent("https://github.com/haylinmoore/dollpublish")
 }
 
+pub async fn view_user_index(
+    State(state): State<crate::AppState>,
+    Path(username): Path<String>,
+) -> Result<Html<String>> {
+    match Post::load(&state.data_dir, &username, "index").await {
+        Ok(post) => {
+            let rendered_content = post.render_content();
+            let html = state
+                .templates
+                .render(&state.data_dir, &username, &post, &rendered_content);
+            Ok(Html(html))
+        }
+        Err(_) => {
+            let message = format!(
+                "{} does not have a landing page, if you are {} you can create one by making a post with the id index",
+                username, username
+            );
+            Ok(Html(format!("<html><body><p>{}</p></body></html>", message)))
+        }
+    }
+}
+
 pub fn view_routes() -> axum::Router<crate::AppState> {
     axum::Router::new()
         .route("/", axum::routing::get(redirect_to_github))
+        .route("/:username", axum::routing::get(view_user_index))
+        .route("/:username/", axum::routing::get(view_user_index))
         .route("/:username/:id/", axum::routing::get(view_post))
         .route(
             "/:username/:id/attachments/:file",
