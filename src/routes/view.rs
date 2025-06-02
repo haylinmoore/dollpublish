@@ -4,7 +4,7 @@ use crate::{
 };
 use axum::body::Body;
 use axum::http::{header, HeaderMap};
-use axum::response::Response;
+use axum::response::{Redirect, Response};
 use axum::{
     extract::{Path, State},
     response::{Html, IntoResponse},
@@ -52,8 +52,14 @@ pub async fn serve_attachment(
 
     Ok((headers, body).into_response())
 }
+
+pub async fn redirect_to_github() -> Redirect {
+    Redirect::permanent("https://github.com/haylinmoore/dollpublish")
+}
+
 pub fn view_routes() -> axum::Router<crate::AppState> {
     axum::Router::new()
+        .route("/", axum::routing::get(redirect_to_github))
         .route("/:username/:id/", axum::routing::get(view_post))
         .route(
             "/:username/:id/attachments/:file",
